@@ -1,545 +1,839 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>University Merit Calculator - VectaStack HQ</title>
-  <meta name="google-adsense-account" content="ca-pub-9004858087599577">
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9004858087599577"
-     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Aether Core 4K</title>
+    <style>
+        :root {
+            --bg-color: #050508;
+            --card-bg: rgba(15, 15, 30, 0.95);
+            --text-color: #ffffff;
+            --accent-color: #00f2fe;
+            --border-color: rgba(0, 242, 254, 0.3);
+        }
 
-  <!-- Lottie Animation Engine Player -->
-  <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@latest/dist/dotlottie-wc.js" type="module"></script>
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            user-select: none; -webkit-user-select: none; touch-action: none;
+        }
+        body, html {
+            width: 100%; height: 100%; overflow: hidden;
+            background-color: var(--bg-color);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: var(--text-color);
+        }
+        canvas { display: block; width: 100vw; height: 100vh; }
 
-  <style>
-    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    
-    body {
-      margin: 0;
-      padding: 20px;
-      background-color: #0f172a;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      color: #f8fafc;
-    }
+        /* HUD Header */
+        #hud {
+            position: absolute; top: 15px; left: 15px; right: 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            pointer-events: none; z-index: 5;
+        }
+        .stat-box {
+            background: var(--card-bg); padding: 8px 12px; border-radius: 12px;
+            border: 1px solid var(--border-color); backdrop-filter: blur(10px);
+            display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.15);
+            pointer-events: auto;
+        }
+        .stat-label { font-size: 9px; letter-spacing: 1px; color: #8899a6; text-transform: uppercase; }
+        .stat-val { font-size: 18px; font-weight: 800; color: var(--accent-color); }
+        .hearts-val { font-size: 16px; letter-spacing: 2px; }
 
-    /* Top Ad Slot Container */
-    .ad-slot-top {
-      width: 100%;
-      max-width: 440px;
-      margin-bottom: 15px;
-      background: #1e293b;
-      border: 1px dashed #334155;
-      border-radius: 8px;
-      min-height: 90px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #64748b;
-      font-size: 11px;
-    }
+        .hud-buttons { display: flex; gap: 6px; pointer-events: auto; }
+        .icon-btn {
+            background: var(--card-bg); border: 1px solid var(--border-color);
+            color: var(--text-color); padding: 8px 12px; border-radius: 8px;
+            font-size: 11px; font-weight: bold; cursor: pointer; backdrop-filter: blur(8px);
+        }
 
-    .calc-card {
-      background-color: #1e293b;
-      padding: 30px;
-      border-radius: 16px;
-      box-shadow: 0 20px 30px rgba(0,0,0,0.5);
-      width: 100%;
-      max-width: 440px;
-      text-align: center;
-      border: 1px solid #334155;
-    }
+        /* Modals */
+        .modal-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 5, 12, 0.95); backdrop-filter: blur(12px);
+            display: flex; justify-content: center; align-items: center; z-index: 100;
+        }
+        .hidden { display: none !important; }
 
-    .calc-card h2 {
-      margin-top: 0;
-      color: #f8fafc;
-      font-size: 24px;
-      font-weight: 700;
-      margin-bottom: 20px;
-    }
+        .neon-card {
+            background: var(--card-bg); border: 2px solid var(--accent-color);
+            border-radius: 20px; padding: 22px; width: 90%; max-width: 480px;
+            max-height: 90vh; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            text-align: center; box-shadow: 0 0 30px var(--border-color); position: relative;
+            overflow-y: auto;
+        }
+        .neon-title {
+            font-size: 26px; font-weight: 900;
+            background: linear-gradient(45deg, var(--accent-color), #ff007f);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
 
-    .input-group {
-      margin-bottom: 16px;
-      text-align: left;
-    }
+        /* Rank Badge */
+        .rank-badge {
+            display: inline-block; padding: 4px 12px; border-radius: 20px;
+            font-size: 11px; font-weight: bold; text-transform: uppercase;
+            margin-top: 4px; background: rgba(0, 242, 254, 0.15); border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+        }
 
-    .input-group label {
-      display: block;
-      font-weight: 600;
-      margin-bottom: 6px;
-      color: #94a3b8;
-      font-size: 13px;
-    }
+        /* Skins Grid Container with Fixed Scroll */
+        .skins-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+            margin: 15px 0; max-height: 220px; overflow-y: auto; overflow-x: hidden;
+            width: 100%; padding: 4px; pointer-events: auto; touch-action: pan-y;
+            -webkit-overflow-scrolling: touch;
+        }
+        .skins-grid::-webkit-scrollbar { width: 6px; }
+        .skins-grid::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
 
-    .input-row {
-      display: flex;
-      gap: 10px;
-    }
+        .skin-card {
+            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px; padding: 10px 8px; text-align: center; cursor: pointer;
+            transition: all 0.2s; pointer-events: auto;
+        }
+        .skin-card.active { border-color: var(--accent-color); background: rgba(0, 242, 254, 0.15); box-shadow: 0 0 10px var(--border-color); }
+        .skin-card.locked { opacity: 0.55; }
 
-    .input-row input {
-      width: 50%;
-      padding: 12px;
-      background-color: #0f172a;
-      border: 1px solid #334155;
-      border-radius: 8px;
-      font-size: 15px;
-      color: #f8fafc;
-      outline: none;
-      transition: all 0.2s;
-    }
+        #previewCanvas {
+            width: 70px; height: 70px; margin: 0 auto 8px;
+            border-radius: 50%; background: rgba(0, 0, 0, 0.5); border: 2px solid var(--accent-color);
+            box-shadow: 0 0 15px var(--border-color); flex-shrink: 0;
+        }
 
-    .input-row input:focus {
-      border-color: #38bdf8;
-      box-shadow: 0 0 8px rgba(56, 189, 248, 0.3);
-    }
+        .menu-btn {
+            width: 100%; padding: 10px; margin: 5px 0; border: none; border-radius: 10px;
+            font-weight: 800; cursor: pointer; text-transform: uppercase; font-size: 11px;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-enter { background: linear-gradient(45deg, #00f2fe, #4facfe); color: #000; }
+        .btn-skins { background: transparent; border: 2px solid #ff007f; color: #ff007f; }
+        .btn-shop { background: rgba(255, 215, 0, 0.15); border: 2px solid #ffd700; color: #ffd700; }
+        .btn-quests { background: rgba(0, 255, 170, 0.15); border: 2px solid #00ffaa; color: #00ffaa; }
+        .btn-amazon { background: rgba(255, 153, 0, 0.15); border: 2px solid #ff9900; color: #ff9900; }
+        .btn-coffee { background: rgba(255, 105, 180, 0.15); border: 2px solid #ff69b4; color: #ff69b4; }
+        .btn-leave { background: rgba(255, 42, 109, 0.15); border: 1px solid #ff2a6d; color: #ff2a6d; }
+        .btn-back { position: absolute; top: 15px; left: 15px; background: transparent; border: 1px solid #8899a6; color: #8899a6; padding: 6px 12px; border-radius: 6px; z-index: 10; cursor: pointer; }
 
-    .custom-select {
-      width: 100%;
-      padding: 12px;
-      font-size: 14px;
-      font-weight: 700;
-      color: #f8fafc;
-      background-color: #0f172a;
-      border: 1px solid #334155;
-      border-radius: 8px;
-      margin-bottom: 15px;
-      outline: none;
-      cursor: pointer;
-    }
-
-    .custom-select:focus {
-      border-color: #38bdf8;
-    }
-
-    .formula-badge {
-      display: block;
-      background: #0f172a;
-      color: #38bdf8;
-      padding: 10px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 700;
-      margin-bottom: 18px;
-      border: 1px solid #334155;
-      line-height: 1.4;
-    }
-
-    .btn-calc {
-      width: 100%;
-      padding: 14px;
-      background: linear-gradient(135deg, #0284c7, #0369a1);
-      color: #ffffff;
-      border: none;
-      border-radius: 8px;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      margin-top: 10px;
-      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
-    }
-
-    .btn-calc:hover {
-      background: linear-gradient(135deg, #0369a1, #075985);
-    }
-
-    .btn-reset {
-      width: 100%;
-      padding: 12px;
-      background-color: #334155;
-      color: #cbd5e1;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: background-color 0.2s ease;
-      margin-top: 10px;
-    }
-
-    .btn-reset:hover {
-      background-color: #475569;
-      color: #ffffff;
-    }
-
-    /* In-Card Ad Slot */
-    .ad-slot-card {
-      margin-top: 15px;
-      background: #0f172a;
-      border: 1px dashed #334155;
-      border-radius: 8px;
-      min-height: 100px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #64748b;
-      font-size: 11px;
-    }
-
-    .brand-footer {
-      margin-top: 18px;
-      font-size: 12px;
-      color: #64748b;
-      font-weight: 600;
-      border-top: 1px solid #334155;
-      padding-top: 12px;
-    }
-
-    .brand-footer span {
-      color: #38bdf8;
-      font-weight: 700;
-    }
-
-    .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.85);
-      backdrop-filter: blur(4px);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s ease;
-      z-index: 1000;
-    }
-
-    .modal-overlay.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .modal-box {
-      background: #1e293b;
-      border: 1px solid #334155;
-      padding: 25px;
-      border-radius: 16px;
-      width: 90%;
-      max-width: 440px;
-      text-align: center;
-      position: relative;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
-    }
-
-    .modal-box h3 {
-      color: #f8fafc;
-      margin-top: 0;
-      margin-bottom: 5px;
-    }
-
-    .close-btn {
-      position: absolute;
-      top: 15px;
-      right: 20px;
-      font-size: 24px;
-      font-weight: bold;
-      color: #64748b;
-      cursor: pointer;
-    }
-
-    .close-btn:hover { color: #ef4444; }
-
-    .animation-wrapper {
-      width: 130px;
-      height: 130px;
-      margin: 0 auto 10px auto;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .badge-percent {
-      display: inline-block;
-      padding: 6px 18px;
-      border-radius: 20px;
-      font-size: 22px;
-      font-weight: bold;
-      margin: 8px 0;
-    }
-
-    .badge-pass {
-      background-color: #10b981;
-      color: #ffffff;
-      box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
-    }
-
-    .badge-fail {
-      background-color: #ef4444;
-      color: #ffffff;
-      box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
-    }
-
-    .merit-tier {
-      font-size: 13px;
-      font-weight: bold;
-      margin-bottom: 12px;
-    }
-
-    .course-list {
-      text-align: left;
-      margin-top: 12px;
-      padding-left: 0;
-      list-style: none;
-    }
-
-    .course-list li {
-      background: #0f172a;
-      padding: 10px 12px;
-      margin-bottom: 8px;
-      border-left: 4px solid #38bdf8;
-      border-radius: 6px;
-      font-weight: 600;
-      color: #e2e8f0;
-      font-size: 13px;
-    }
-  </style>
+        .high-score-banner {
+            background: rgba(0, 242, 254, 0.1); border: 1px solid var(--accent-color);
+            border-radius: 10px; padding: 6px; margin: 8px 0 4px; font-size: 12px; font-weight: bold;
+            color: var(--accent-color);
+        }
+        
+        .quest-item {
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px; padding: 8px 10px; margin: 6px 0; width: 100%; text-align: left;
+            display: flex; justify-content: space-between; align-items: center; font-size: 11px;
+        }
+        .shop-item {
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px; padding: 8px 10px; margin: 6px 0; width: 100%; text-align: left;
+            display: flex; justify-content: space-between; align-items: center; font-size: 11px;
+        }
+    </style>
 </head>
 <body>
 
-  <!-- Top Display Ad Unit -->
-  <div class="ad-slot-top">
-    <!-- Paste Google AdSense Banner Code Here -->
-    <span>ADVERTISEMENT BANNER SLOT</span>
-  </div>
+    <!-- HUD -->
+    <div id="hud">
+        <div class="stat-box">
+            <div>
+                <div class="stat-label">⚡ Score</div>
+                <div id="score" class="stat-val">0</div>
+            </div>
+            <div style="border-left: 1px solid var(--border-color); padding-left: 8px;">
+                <div class="stat-label">🔑 Keys</div>
+                <div id="keyCount" class="stat-val" style="color:#ffd700;">0</div>
+            </div>
+            <div style="border-left: 1px solid var(--border-color); padding-left: 8px;">
+                <div class="stat-label">⏱️ Time</div>
+                <div id="timerDisplay" class="stat-val" style="font-size:14px; color:#ff007f;">00:00</div>
+            </div>
+            <div style="border-left: 1px solid var(--border-color); padding-left: 8px;">
+                <div class="stat-label">Lives</div>
+                <div id="heartsContainer" class="hearts-val">❤️❤️❤️</div>
+            </div>
+        </div>
 
-  <div class="calc-card">
-    <h2>University Merit Calculator</h2>
-    
-    <div class="input-group">
-      <label for="courseSelect">Select Target Course / University Test:</label>
-      <select id="courseSelect" class="custom-select" onchange="updateFormula()">
-        <option value="ecat">ECAT UET Engineering</option>
-        <option value="mdcat">MDCAT Medical</option>
-        <option value="nust">NUST NET Test</option>
-        <option value="fast">FAST-NUCES CS Test</option>
-        <option value="pieas">PIEAS Admission Test</option>
-        <option value="comsats">COMSATS NTS-NAT</option>
-      </select>
+        <div class="hud-buttons">
+            <button id="lobbyBtn" class="icon-btn" style="border-color:#00f2fe; color:#00f2fe;" onclick="uiClickSound(); openMain();">🏠 Lobby</button>
+        </div>
     </div>
 
-    <div class="formula-badge" id="formulaText">
-      Formula: 17% Matric | 50% FSc | 33% ECAT Test
+    <!-- Main Menu -->
+    <div id="main-menu" class="modal-overlay">
+        <div class="neon-card">
+            <div class="neon-title">AETHER CORE 4K</div>
+            <p style="font-size:11px; color:#8899a6; margin-bottom:3px;">Vertical Neon Ascent</p>
+
+            <div class="high-score-banner" id="menuHighScore">🏆 High Score: 0</div>
+            <div class="rank-badge" id="playerRankBadge">Rank: Novice 🥉</div>
+
+            <div style="margin-top: 10px; width: 100%;">
+                <button class="menu-btn btn-enter" onclick="uiClickSound(); startGame();">⚡ Enter Game</button>
+                <button class="menu-btn btn-skins" onclick="uiClickSound(); openSkins();">✨ Skins & Powers</button>
+                <button class="menu-btn btn-shop" onclick="uiClickSound(); openShop();">🛒 Upgrades Shop</button>
+                <button class="menu-btn btn-quests" onclick="uiClickSound(); openQuests();">📜 Daily Quests</button>
+                <button class="menu-btn" style="background:rgba(255,215,0,0.15); border:1px solid #ffd700; color:#ffd700;" onclick="uiClickSound(); openKeyInfo();">🔑 Key Vault</button>
+                <button class="menu-btn btn-amazon" onclick="uiClickSound(); openAmazon();">🛒 Amazon Deals</button>
+                <button class="menu-btn btn-coffee" onclick="uiClickSound(); openCoffee();">☕ Buy Me a Coffee</button>
+                <button class="menu-btn btn-leave" onclick="uiClickSound(); leaveGame();">❌ Leave Game</button>
+            </div>
+        </div>
     </div>
 
-    <!-- Matric Inputs -->
-    <div class="input-group">
-      <label id="lblMatric">Matric / O-Level Marks (17% Weightage):</label>
-      <div class="input-row">
-        <input type="number" id="obtMatric" placeholder="Obtained">
-        <input type="number" id="totMatric" placeholder="Total">
-      </div>
+    <!-- Key Vault -->
+    <div id="key-menu" class="modal-overlay hidden">
+        <button class="btn-back" onclick="uiClickSound(); openMain();">← Go Back</button>
+        <div class="neon-card">
+            <div class="neon-title" style="color:#ffd700; font-size:22px;">🔑 KEY VAULT</div>
+            <p style="font-size:13px; margin:15px 0; color:#ccc;">Golden Keys spawn randomly during gameplay. Collect Keys to exchange for massive custom skins inside Skins & Powers!</p>
+            <h3 style="color:#ffd700; font-size:20px;" id="vaultKeysText">Keys Collected: 0 🔑</h3>
+        </div>
     </div>
 
-    <!-- FSc Inputs -->
-    <div class="input-group">
-      <label id="lblFsc">FSc / A-Level Marks (50% Weightage):</label>
-      <div class="input-row">
-        <input type="number" id="obtFsc" placeholder="Obtained">
-        <input type="number" id="totFsc" placeholder="Total">
-      </div>
+    <!-- Upgrades Shop Menu -->
+    <div id="shop-menu" class="modal-overlay hidden">
+        <button class="btn-back" onclick="uiClickSound(); openMain();">← Go Back</button>
+        <div class="neon-card">
+            <div class="neon-title" style="color:#ffd700; font-size:20px;">🛒 UPGRADES SHOP</div>
+            <p style="font-size:11px; color:#aaa; margin:5px 0 10px;">Spend your Keys 🔑 to buy permanent boosts & max levels!</p>
+            <div style="width: 100%;" id="shopItemsContainer"></div>
+        </div>
     </div>
 
-    <!-- Entry Test Inputs -->
-    <div class="input-group">
-      <label id="lblTest">Entry Test Marks (33% Weightage):</label>
-      <div class="input-row">
-        <input type="number" id="obtTest" placeholder="Obtained">
-        <input type="number" id="totTest" placeholder="Total">
-      </div>
-    </div>
-<script>
-<script>
- function runMeritCalculator() {
-    calculate();
-window.open('https://www.effectivecpmnetwork.com/u8hxc3j0?key=b70796a24d34f1b36b380a629d64dc60', '_blank');
-}
-</script>
-
-<button class="btn-calc" onclick="runMeritCalculator()">Calculate Merit</button>
-
-    <button class="btn-reset" onclick="resetForm()">Reset Form</button>
-
-    <!-- In-Card Native Ad Unit -->
-    <div class="ad-slot-card">
-      <!-- Paste Google AdSense Square/Native Code Here -->
-      <span>NATIVE AD SLOT</span>
+    <!-- Daily Quests Menu -->
+    <div id="quests-menu" class="modal-overlay hidden">
+        <button class="btn-back" onclick="uiClickSound(); openMain();">← Go Back</button>
+        <div class="neon-card">
+            <div class="neon-title" style="color:#00ffaa; font-size:20px;">📜 DAILY QUESTS</div>
+            <p style="font-size:11px; color:#aaa; margin:5px 0 10px;">Complete challenges to earn bonus keys!</p>
+            <div style="width: 100%;" id="questsContainer"></div>
+        </div>
     </div>
 
-    <div class="brand-footer">
-      Powered by <span>VectaStack HQ</span>
+    <!-- Skins Menu -->
+    <div id="skins-menu" class="modal-overlay hidden">
+        <button class="btn-back" onclick="uiClickSound(); openMain();">← Go Back</button>
+        <div class="neon-card">
+            <h3 style="font-size: 15px; color:var(--accent-color); margin-bottom:3px;">SKIN PREVIEW</h3>
+            <canvas id="previewCanvas" width="70" height="70"></canvas>
+
+            <div class="skins-grid" id="skinsContainer"></div>
+            <button class="menu-btn btn-skins" onclick="uiClickSound(); unequipSkin();" style="font-size:11px; padding:8px; flex-shrink:0;">Reset Default Skin</button>
+        </div>
     </div>
-  </div>
 
-  <!-- Popup Modal -->
-  <div class="modal-overlay" id="resultModal">
-    <div class="modal-box">
-      <span class="close-btn" onclick="closeModal()">&times;</span>
-      
-      <div class="animation-wrapper" id="animationSlot"></div>
+    <canvas id="gameCanvas"></canvas>
 
-      <h3 id="modalTitle">University Eligibility Result</h3>
-      <div style="color: #94a3b8; font-size: 13px;">Calculated Aggregate:</div>
-      <div class="badge-percent" id="displayPercent">0.00%</div>
-      <div class="merit-tier" id="meritTier"></div>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('score');
+        const keyCountEl = document.getElementById('keyCount');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const heartsContainer = document.getElementById('heartsContainer');
 
-      <p style="color: #94a3b8; font-size: 12px; margin-bottom: 8px;">Based on official closing merit trends, you can apply for:</p>
-      
-      <ul class="course-list" id="courseList"></ul>
-    </div>
-  </div>
+        let width, height, dpr;
+        let currentRunScore = 0;
+        let highScore = 0;
+        let keysCollected = 0;
+        let playTimeSeconds = 0;
+        let hearts = 3;
+        let gameRunning = false;
+        let comboMultiplier = 1;
 
-  <script>
-    const formulas = {
-      ecat:    { matric: 0.17, fsc: 0.50, test: 0.33, name: "ECAT Test" },
-      mdcat:   { matric: 0.10, fsc: 0.40, test: 0.50, name: "MDCAT Test" },
-      nust:    { matric: 0.10, fsc: 0.15, test: 0.75, name: "NET Test" },
-      fast:    { matric: 0.10, fsc: 0.40, test: 0.50, name: "FAST Test" },
-      pieas:   { matric: 0.15, fsc: 0.25, test: 0.60, name: "PIEAS Test" },
-      comsats: { matric: 0.10, fsc: 0.40, test: 0.50, name: "NTS Test" }
-    };
+        let baseScrollSpeed = 2.45; 
+        let currentScrollSpeed = 2.45;
 
-    const HAPPY_ANIMATION = "https://assets2.lottiefiles.com/packages/lf20_tou3y0bu.json"; 
-    const SAD_ANIMATION = "https://assets10.lottiefiles.com/packages/lf20_k239m99a.json";   
+        // Upgrades Inventory / Shop Data
+        let upgrades = {
+            extraLife: { level: 0, max: 5, cost: 5, name: 'Bonus Starting Hearts ❤️', desc: 'Increase starting hearts (+1 per level)' },
+            shieldBoost: { level: 0, max: 5, cost: 3, name: 'Shield Duration +', desc: '+2s extra shield protection time per level' },
+            magnet: { level: 0, max: 3, cost: 8, name: 'Key/Score Magnet 🧲', desc: 'Wider attraction radius for collectibles' }
+        };
 
-    function updateFormula() {
-      const selected = document.getElementById('courseSelect').value;
-      const config = formulas[selected];
-
-      const mPct = (config.matric * 100).toFixed(0);
-      const fPct = (config.fsc * 100).toFixed(0);
-      const tPct = (config.test * 100).toFixed(0);
-
-      document.getElementById('formulaText').innerText = `Formula: ${mPct}% Matric | ${fPct}% FSc | ${tPct}% ${config.name}`;
-      document.getElementById('lblMatric').innerText = `Matric / O-Level Marks (${mPct}% Weightage):`;
-      document.getElementById('lblFsc').innerText = `FSc / A-Level Marks (${fPct}% Weightage):`;
-      document.getElementById('lblTest').innerText = `Entry Test Marks (${tPct}% Weightage):`;
-    }
-
-    function calculateAggregate() {
-      const selected = document.getElementById('courseSelect').value;
-      const config = formulas[selected];
-
-      const obtM = parseFloat(document.getElementById('obtMatric').value) || 0;
-      const totM = parseFloat(document.getElementById('totMatric').value) || 1;
-
-      const obtF = parseFloat(document.getElementById('obtFsc').value) || 0;
-      const totF = parseFloat(document.getElementById('totFsc').value) || 1;
-
-      const obtT = parseFloat(document.getElementById('obtTest').value) || 0;
-      const totT = parseFloat(document.getElementById('totTest').value) || 1;
-
-      const matricPart = (obtM / totM) * (config.matric * 100);
-      const fscPart = (obtF / totF) * (config.fsc * 100);
-      const testPart = (obtT / totT) * (config.test * 100);
-
-      const percentage = (matricPart + fscPart + testPart).toFixed(2);
-      
-      const displayBadge = document.getElementById('displayPercent');
-      displayBadge.innerText = percentage + "%";
-
-      const courseListUI = document.getElementById('courseList');
-      const meritTierUI = document.getElementById('meritTier');
-      const animationSlot = document.getElementById('animationSlot');
-      const modalTitle = document.getElementById('modalTitle');
-      
-      courseListUI.innerHTML = "";
-      let eligibleCourses = [];
-
-      if (percentage >= 45) {
-        displayBadge.className = "badge-percent badge-pass";
-        modalTitle.innerText = "Congratulations! 🎉";
-        modalTitle.style.color = "#10b981";
-
-        animationSlot.innerHTML = `<dotlottie-wc src="${HAPPY_ANIMATION}" speed="1" style="width: 120px; height: 120px;" mode="forward" loop autoplay></dotlottie-wc>`;
-
-        if (percentage >= 85) {
-          meritTierUI.innerText = "🏆 Tier-1 Merit Bracket";
-          meritTierUI.style.color = "#f59e0b";
-          eligibleCourses = [
-            "🩺 Public Medical & Dental Colleges (KEMU, AIMC, SIMS, Dow)",
-            "💻 Top Computer Science & Software (NUST NET, FAST, PUCIT, ITU)",
-            "⚙️ Top Engineering (PIEAS, NUST, ECAT UET Main Campus, GIKI)",
-            "📊 Elite Business Schools (LUMS, IBA Karachi, NUST BBA)"
-          ];
-        } else if (percentage >= 70) {
-          meritTierUI.innerText = "⭐ High Merit Bracket";
-          meritTierUI.style.color = "#38bdf8";
-          eligibleCourses = [
-            "🏥 Private Medical & Dental Colleges (NUMS, CMH, FMH)",
-            "💻 Computer Science & IT (COMSATS, ITU, UCP, UMT, Air, Bahria)",
-            "⚙️ Engineering (UET Sub-Campuses, ETEA Engineering)",
-            "💊 Pharm-D, DPT & Allied Health Sciences"
-          ];
-        } else if (percentage >= 60) {
-          meritTierUI.innerText = "👍 Moderate Merit Bracket";
-          meritTierUI.style.color = "#a855f7";
-          eligibleCourses = [
-            "💻 BS CS / Software / AI (Affiliated & Private Colleges)",
-            "📊 BBA / BS Commerce / Banking & Finance",
-            "🌾 BS Agriculture, Biotechnology & Food Sciences"
-          ];
-        } else {
-          meritTierUI.innerText = "✔️ Standard Pass Bracket";
-          meritTierUI.style.color = "#10b981";
-          eligibleCourses = [
-            "🎓 General BS Degree Programs (BS Social Sciences, Arts)",
-            "💼 BBA / BS Commerce (Private / Evening Programs)",
-            "🎓 Associate Degree Programs (ADP - 2 Years)"
-          ];
-        }
-      } else {
-        displayBadge.className = "badge-percent badge-fail";
-        modalTitle.innerText = "We're Sorry... 😔";
-        modalTitle.style.color = "#ef4444";
-        meritTierUI.innerText = "❌ Below Minimum 45% Threshold";
-        meritTierUI.style.color = "#ef4444";
-
-        animationSlot.innerHTML = `<dotlottie-wc src="${SAD_ANIMATION}" speed="1" style="width: 120px; height: 120px;" mode="forward" loop autoplay></dotlottie-wc>`;
-
-        eligibleCourses = [
-          "⚠️ Aggregate score is below the 45% minimum criteria for degree admissions.",
-          "💡 Recommended Step: Apply for Intermediate Marks Improvement Exams to increase your score."
+        // Quests Data
+        let quests = [
+            { id: 'survive1', desc: 'Survive for 2 minutes in a run', target: 120, current: 0, reward: 3, completed: false },
+            { id: 'keys3', desc: 'Collect 3 Keys in total runs', target: 3, current: 0, reward: 4, completed: false },
+            { id: 'score2k', desc: 'Reach 2,000 points in any run', target: 2000, current: 0, reward: 5, completed: false }
         ];
-      }
 
-      eligibleCourses.forEach(course => {
-        const li = document.createElement('li');
-        li.innerText = course;
-        courseListUI.appendChild(li);
-      });
+        // Robust Persistent Audio Engine
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        let audioCtx;
+        let lobbyMusicInterval = null;
 
-      document.getElementById('resultModal').classList.add('active');
-    }
+        function initAudio() {
+            if (!audioCtx) audioCtx = new AudioCtx();
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
 
-    function resetForm() {
-      document.getElementById('obtMatric').value = '';
-      document.getElementById('totMatric').value = '';
-      document.getElementById('obtFsc').value = '';
-      document.getElementById('totFsc').value = '';
-      document.getElementById('obtTest').value = '';
-      document.getElementById('totTest').value = '';
-      document.getElementById('displayPercent').innerText = '0.00%';
-    }
+        // UI Click Sound Effect
+        function uiClickSound() {
+            initAudio();
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                const now = audioCtx.currentTime;
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.exponentialRampToValueAtTime(880, now + 0.08);
+                gain.gain.setValueAtTime(0.15, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+                osc.start(now); osc.stop(now + 0.08);
+            } catch(e) {}
+        }
 
-    function closeModal() {
-      document.getElementById('resultModal').classList.remove('active');
-    }
+        // Lobby Background Music Banger
+        function startLobbyMusic() {
+            if (lobbyMusicInterval) return;
+            const notes = [220, 246.94, 261.63, 329.63, 392.00, 440];
+            let step = 0;
+            lobbyMusicInterval = setInterval(() => {
+                if (gameRunning) return;
+                initAudio();
+                try {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain); gain.connect(audioCtx.destination);
+                    const now = audioCtx.currentTime;
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(notes[step % notes.length], now);
+                    gain.gain.setValueAtTime(0.05, now);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.3);
+                    osc.start(now); osc.stop(now + 0.3);
+                    step++;
+                } catch(e) {}
+            }, 350);
+        }
 
-    window.onclick = function(event) {
-      const modal = document.getElementById('resultModal');
-      if (event.target == modal) {
-        closeModal();
-      }
-    }
+        function stopLobbyMusic() {
+            if (lobbyMusicInterval) {
+                clearInterval(lobbyMusicInterval);
+                lobbyMusicInterval = null;
+            }
+        }
 
-    window.onload = updateFormula;
-  </script>
+        // Gameplay Sound Effects (Guaranteed every match)
+        function playSound(type) {
+            initAudio();
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                const now = audioCtx.currentTime;
 
+                if (type === 'score') {
+                    osc.frequency.setValueAtTime(587.33, now);
+                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.1);
+                    gain.gain.setValueAtTime(0.15, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
+                    osc.start(now); osc.stop(now + 0.1);
+                } else if (type === 'key') {
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.exponentialRampToValueAtTime(1046.5, now + 0.2);
+                    gain.gain.setValueAtTime(0.2, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+                    osc.start(now); osc.stop(now + 0.2);
+                } else if (type === 'shield' || type === 'heart' || type === 'magnet') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(800, now + 0.25);
+                    gain.gain.setValueAtTime(0.2, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
+                    osc.start(now); osc.stop(now + 0.25);
+                } else if (type === 'hit') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, now);
+                    osc.frequency.linearRampToValueAtTime(40, now + 0.2);
+                    gain.gain.setValueAtTime(0.25, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+                    osc.start(now); osc.stop(now + 0.2);
+                }
+            } catch(e) {}
+        }
+
+        // Player & Skins (100+ Skins with Key Exchange Prices)
+        const player = {
+            x: 0, y: 0, targetX: 0, targetY: 0, radius: 16,
+            skin: 'default', color: '#00f2fe', emoji: '💎', trail: [],
+            shieldActive: false, shieldEndTime: 0, shieldDuration: 5000,
+            magnetActive: false, magnetEndTime: 0
+        };
+
+        const emojisList = ['💎','🐉','🕷️','🪵','⭐','🦈','🗿','🛒','🐆','⚡','🔥','❄️','🌌','☀️','👻','🤖','🪐','⚡','☣️','👑','☄️','🌀','🦹','💀','🦅','🥷','🐲','🐺','🐅','🐍','💎','👹','👼','☢️','✨','🦠','💻','🕳️','🗡️','⏳','🚀','👽','🦾','💣','🌊','🌋','⚡','🧊','🌠','♾️','🔮','🛡️','🗡️','👑','🔥','⚡','💎','🌟','💫','☄️','💥','🌀','🔮','🧿','🔭','🛰️','🛸','🚀','🪐','🌙','⭐','☀️','⚡','🔥','💧','🌊','❄️','⚡','🌪️','🌋','🧨','💣','🗡️','⚔️','🛡️','🏹','🔧','⚙️','🔩','🧱','🔮','💎','👑','🏆','🥇','🎖️','🏅','💯','🔥','⚡','💀','👻'];
+        const colorsList = ['#00f2fe','#ff0055','#ff0033','#ffaa00','#0055ff','#00ffaa','#aa00ff','#ff9900','#ff3300','#ffff00','#ff4500','#00ffff','#8a2be2','#ffa500','#7fffd4','#708090','#da70d6','#adff2f','#32cd32','#ffd700','#ff6347','#00fa9a','#4b0082','#ff1493','#1e90ff','#2f4f4f','#ff8c00','#d3d3d3','#ff4500','#228b22','#00ced1','#dc143c','#fffacd','#00ff7f','#ffb6c1','#adff2f','#00ff00','#483d8b','#ff0000','#deb887','#4682b4','#39ff14','#778899','#ff4500','#1e90ff','#ff6347','#ffff33','#e0ffff','#9932cc','#ff1493'];
+
+        const skins = [];
+        for (let i = 1; i <= 110; i++) {
+            let id = i === 1 ? 'default' : `skin_${i}`;
+            let name = i === 1 ? 'Aether Core' : `Neon Vanguard #${i}`;
+            let emoji = emojisList[(i - 1) % emojisList.length];
+            let color = colorsList[(i - 1) % colorsList.length];
+            let req = i === 1 ? 'Free Default' : `${(i - 1) * 2} Keys 🔑`;
+            let price = i === 1 ? 0 : (i - 1) * 2;
+            skins.push({ id, name, emoji, color, req, price, unlocked: i === 1 });
+        }
+        skins.find(s => s.id === 'skin_2').name = 'Abyssal Beast';
+        skins.find(s => s.id === 'skin_2').req = '10 Keys 🔑';
+        skins.find(s => s.id === 'skin_2').price = 10;
+        skins.find(s => s.id === 'skin_8').name = 'Amazon Sovereign';
+        skins.find(s => s.id === 'skin_8').req = 'Tap Amazon';
+        skins.find(s => s.id === 'skin_8').price = 0;
+
+        let targets = [], obstacles = [], shields = [], heartDrops = [], keyDrops = [], magnetDrops = [];
+
+        function resize() {
+            dpr = window.devicePixelRatio || 1;
+            width = window.innerWidth; height = window.innerHeight;
+            canvas.width = width * dpr; canvas.height = height * dpr;
+            ctx.scale(dpr, dpr);
+            if (player.x === 0) { player.x = player.targetX = width / 2; player.y = player.targetY = height * 0.75; }
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        function handleMove(clientX, clientY) {
+            if (gameRunning) {
+                player.targetX = clientX;
+                player.targetY = clientY;
+            }
+        }
+
+        window.addEventListener('pointermove', (e) => handleMove(e.clientX, e.clientY));
+        window.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) {
+                handleMove(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        }, { passive: true });
+
+        function getRank(score) {
+            if (score >= 3500) return { title: 'Diamond Tier 💎', color: '#00ffaa' };
+            if (score >= 1500) return { title: 'Gold Tier 🥇', color: '#ffd700' };
+            if (score >= 1000) return { title: 'Silver Tier 🥈', color: '#c0c0c0' };
+            if (score >= 500) return { title: 'Bronze Tier 🥉', color: '#cd7f32' };
+            return { title: 'Novice Tier 🥉', color: '#00f2fe' };
+        }
+
+        function updateRankUI() {
+            const rank = getRank(highScore);
+            const badge = document.getElementById('playerRankBadge');
+            badge.textContent = `Rank: ${rank.title}`;
+            badge.style.color = rank.color;
+            badge.style.borderColor = rank.color;
+        }
+
+        function loadUserData() {
+            const data = localStorage.getItem('aetherCore_userState');
+            if (data) {
+                const parsed = JSON.parse(data);
+                highScore = parsed.highScore || 0;
+                keysCollected = parsed.keys || 0;
+                player.skin = parsed.skin || 'default';
+                if (parsed.upgrades) upgrades = parsed.upgrades;
+                if (parsed.quests) quests = parsed.quests;
+                
+                if (parsed.unlockedSkins) {
+                    parsed.unlockedSkins.forEach(id => {
+                        const s = skins.find(k => k.id === id);
+                        if(s) s.unlocked = true;
+                    });
+                }
+
+                const currentSkin = skins.find(s => s.id === player.skin && s.unlocked) || skins[0];
+                player.skin = currentSkin.id;
+                player.color = currentSkin.color;
+                player.emoji = currentSkin.emoji;
+
+                keyCountEl.textContent = keysCollected;
+                document.getElementById('menuHighScore').textContent = `🏆 High Score: ${highScore}`;
+                updateRankUI();
+            }
+            startLobbyMusic();
+        }
+
+        function saveUserData() {
+            if (currentRunScore > highScore) highScore = currentRunScore;
+            const unlockedList = skins.filter(s => s.unlocked).map(s => s.id);
+            const state = {
+                highScore: highScore,
+                keys: keysCollected,
+                skin: player.skin,
+                unlockedSkins: unlockedList,
+                upgrades: upgrades,
+                quests: quests
+            };
+            localStorage.setItem('aetherCore_userState', JSON.stringify(state));
+            document.getElementById('menuHighScore').textContent = `🏆 High Score: ${highScore}`;
+            updateRankUI();
+        }
+
+        function checkUnlocks() {
+            skins.forEach(s => {
+                if (!s.unlocked) {
+                    if (s.req.includes('pts')) {
+                        const reqScore = parseInt(s.req.replace(/[^0-9]/g, ''));
+                        if (currentRunScore >= reqScore || highScore >= reqScore) s.unlocked = true;
+                    }
+                }
+            });
+
+            quests.forEach(q => {
+                if (!q.completed) {
+                    if (q.id === 'survive1' && playTimeSeconds >= q.target) { q.completed = true; keysCollected += q.reward; }
+                    if (q.id === 'keys3' && keysCollected >= q.target) { q.completed = true; keysCollected += q.reward; }
+                    if (q.id === 'score2k' && currentRunScore >= q.target) { q.completed = true; keysCollected += q.reward; }
+                }
+            });
+
+            saveUserData();
+        }
+
+        function startGame() {
+            stopLobbyMusic();
+            document.getElementById('main-menu').classList.add('hidden');
+            document.getElementById('skins-menu').classList.add('hidden');
+            document.getElementById('key-menu').classList.add('hidden');
+            document.getElementById('shop-menu').classList.add('hidden');
+            document.getElementById('quests-menu').classList.add('hidden');
+
+            hearts = 3 + upgrades.extraLife.level;
+            currentRunScore = 0; playTimeSeconds = 0; comboMultiplier = 1; scoreEl.textContent = '0';
+            timerDisplay.textContent = '00:00';
+            targets = []; obstacles = []; shields = []; heartDrops = []; keyDrops = []; magnetDrops = [];
+            player.x = player.targetX = width / 2;
+            player.y = player.targetY = height * 0.75;
+            updateHeartsUI(); 
+            gameRunning = true;
+        }
+
+        function openMain() {
+            gameRunning = false;
+            saveUserData();
+            document.getElementById('skins-menu').classList.add('hidden');
+            document.getElementById('key-menu').classList.add('hidden');
+            document.getElementById('shop-menu').classList.add('hidden');
+            document.getElementById('quests-menu').classList.add('hidden');
+            document.getElementById('main-menu').classList.remove('hidden');
+            startLobbyMusic();
+        }
+
+        function openSkins() { renderSkinsList(); document.getElementById('main-menu').classList.add('hidden'); document.getElementById('skins-menu').classList.remove('hidden'); }
+        function openKeyInfo() { document.getElementById('vaultKeysText').textContent = `Keys Collected: ${keysCollected} 🔑`; document.getElementById('main-menu').classList.add('hidden'); document.getElementById('key-menu').classList.remove('hidden'); }
+        function openShop() { renderShopList(); document.getElementById('main-menu').classList.add('hidden'); document.getElementById('shop-menu').classList.remove('hidden'); }
+        function openQuests() { renderQuestsList(); document.getElementById('main-menu').classList.add('hidden'); document.getElementById('quests-menu').classList.remove('hidden'); }
+
+        function openAmazon() {
+            const amzSkin = skins.find(s => s.id === 'skin_8');
+            if(amzSkin) amzSkin.unlocked = true;
+            saveUserData();
+            window.open('https://www.amazon.com', '_blank');
+        }
+        function openCoffee() {
+            window.open('https://www.buymeacoffee.com', '_blank');
+        }
+        function leaveGame() { window.location.href = "https://www.google.com"; }
+
+        function updateHeartsUI() {
+            let str = ''; for(let i=0; i<hearts; i++) str += '❤️';
+            heartsContainer.textContent = str || '💀';
+        }
+
+        function formatTime(totalSeconds) {
+            const mins = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+            const secs = (totalSeconds % 60).toString().padStart(2, '0');
+            return `${mins}:${secs}`;
+        }
+
+        function triggerDamage() {
+            if (player.shieldActive) return;
+            playSound('hit');
+            hearts--; comboMultiplier = 1; updateHeartsUI();
+            if (hearts <= 0) {
+                gameRunning = false;
+                const survivalTimeStr = formatTime(playTimeSeconds);
+                alert(`Congratulations! You survived for ${survivalTimeStr}. Returning to Lobby.`);
+                openMain();
+            }
+        }
+
+        function renderShopList() {
+            const container = document.getElementById('shopItemsContainer');
+            container.innerHTML = '';
+            Object.keys(upgrades).forEach(key => {
+                const upg = upgrades[key];
+                const div = document.createElement('div');
+                div.className = 'shop-item';
+                div.innerHTML = `<div><strong>${upg.name}</strong><br><span style="font-size:9px; color:#aaa;">${upg.desc} (Lvl ${upg.level}/${upg.max})</span></div>` +
+                                `<button class="icon-btn" style="color:#ffd700; border-color:#ffd700;" onclick="uiClickSound(); buyUpgrade('${key}')">${upg.level >= upg.max ? 'MAX' : upg.cost + ' 🔑'}</button>`;
+                container.appendChild(div);
+            });
+        }
+
+        function buyUpgrade(key) {
+            const upg = upgrades[key];
+            if (upg.level < upg.max && keysCollected >= upg.cost) {
+                keysCollected -= upg.cost;
+                upg.level++;
+                keyCountEl.textContent = keysCollected;
+                saveUserData();
+                renderShopList();
+            }
+        }
+
+        function renderQuestsList() {
+            const container = document.getElementById('questsContainer');
+            container.innerHTML = '';
+            quests.forEach(q => {
+                const div = document.createElement('div');
+                div.className = 'quest-item';
+                div.innerHTML = `<div><strong>${q.desc}</strong><br><span style="font-size:9px; color:#00ffaa;">Reward: +${q.reward} 🔑</span></div>` +
+                                `<div style="font-weight:bold; color:${q.completed ? '#00ffaa' : '#ff9900'};">${q.completed ? 'COMPLETED ✅' : 'IN PROGRESS'}</div>`;
+                container.appendChild(div);
+            });
+        }
+
+        let previewAnimId, previewAngle = 0;
+        function animatePreview(skinObj) {
+            const pCanvas = document.getElementById('previewCanvas');
+            const pCtx = pCanvas.getContext('2d');
+            cancelAnimationFrame(previewAnimId);
+
+            function pLoop() {
+                pCtx.clearRect(0, 0, 70, 70);
+                previewAngle += 0.08;
+                const r = 14 + Math.sin(previewAngle) * 2;
+
+                pCtx.shadowBlur = 12; pCtx.shadowColor = skinObj.color;
+                pCtx.fillStyle = '#ffffff';
+                pCtx.beginPath(); pCtx.arc(35, 35, r, 0, Math.PI * 2); pCtx.fill();
+
+                pCtx.shadowBlur = 0;
+                pCtx.font = '14px serif'; pCtx.textAlign = 'center'; pCtx.textBaseline = 'middle';
+                pCtx.fillText(skinObj.emoji, 35, 35);
+
+                previewAnimId = requestAnimationFrame(pLoop);
+            }
+            pLoop();
+        }
+
+        function renderSkinsList() {
+            const container = document.getElementById('skinsContainer');
+            container.innerHTML = '';
+            skins.forEach(s => {
+                const card = document.createElement('div');
+                card.className = `skin-card ${player.skin === s.id ? 'active' : ''} ${!s.unlocked ? 'locked' : ''}`;
+                let actionText = s.unlocked ? 'Equipped/Owned' : `Exchange: ${s.price} 🔑`;
+                card.innerHTML = `<div style="font-size:11px; font-weight:bold;">${s.emoji} ${s.name}</div><div style="font-size:9px; color:${s.unlocked ? '#00ffaa' : '#ffd700'}; margin-top:2px;">${actionText}</div>`;
+                card.onclick = () => {
+                    animatePreview(s);
+                    if (s.unlocked) {
+                        player.skin = s.id; player.color = s.color; player.emoji = s.emoji;
+                        saveUserData(); renderSkinsList();
+                    } else {
+                        if (keysCollected >= s.price) {
+                            keysCollected -= s.price;
+                            s.unlocked = true;
+                            player.skin = s.id; player.color = s.color; player.emoji = s.emoji;
+                            keyCountEl.textContent = keysCollected;
+                            saveUserData(); renderSkinsList();
+                        } else {
+                            alert('Not enough Keys 🔑 to unlock this skin!');
+                        }
+                    }
+                };
+                container.appendChild(card);
+            });
+            const activeSkinObj = skins.find(k => k.id === player.skin) || skins[0];
+            animatePreview(activeSkinObj);
+        }
+        function unequipSkin() { 
+            player.skin = 'default'; player.color = '#00f2fe'; player.emoji = '💎'; 
+            saveUserData(); animatePreview(skins[0]); renderSkinsList(); 
+        }
+
+        function spawnTarget() { targets.push({ x: Math.random()*(width-60)+30, y: -30, radius: 10, color: '#00f2fe' }); }
+        function spawnObstacle() {
+            const type = Math.random() > 0.5 ? 'bar' : 'bomb';
+            if (type === 'bar') {
+                const obsW = Math.random() * 50 + 40;
+                obstacles.push({ type: 'bar', x: Math.random() * (width - obsW - 40) + 20, y: -30, w: obsW, h: 10 });
+            } else {
+                obstacles.push({ type: 'bomb', x: Math.random() * (width - 60) + 30, y: -30, radius: 12 });
+            }
+        }
+        function spawnShieldItem() { shields.push({ x: Math.random() * (width - 60) + 30, y: -30, radius: 14 }); }
+        function spawnHeartItem() { heartDrops.push({ x: Math.random() * (width - 60) + 30, y: -30, radius: 14 }); }
+        function spawnKeyItem() { keyDrops.push({ x: Math.random() * (width - 60) + 30, y: -30, radius: 12 }); }
+        function spawnMagnetItem() { magnetDrops.push({ x: Math.random() * (width - 60) + 30, y: -30, radius: 14 }); }
+
+        setInterval(() => { if (gameRunning) spawnShieldItem(); }, 25000);
+        setInterval(() => { if (gameRunning) spawnHeartItem(); }, 90000); 
+        setInterval(() => { if (gameRunning) spawnKeyItem(); }, 40000);
+        setInterval(() => { if (gameRunning) spawnMagnetItem(); }, 35000);
+        setInterval(() => { 
+            if (gameRunning) { 
+                playTimeSeconds++; 
+                timerDisplay.textContent = formatTime(playTimeSeconds);
+                checkUnlocks(); 
+            } 
+        }, 1000);
+
+        loadUserData();
+
+        function loop() {
+            ctx.save();
+            ctx.fillStyle = '#050508';
+            ctx.fillRect(0, 0, width, height);
+
+            const now = Date.now();
+
+            if (gameRunning) {
+                currentScrollSpeed = baseScrollSpeed + Math.min(currentRunScore / 10000, 1.2);
+
+                player.x += (player.targetX - player.x) * 0.25;
+                player.y += (player.targetY - player.y) * 0.25;
+
+                player.trail.push({ x: player.x, y: player.y });
+                if (player.trail.length > 8) player.trail.shift();
+
+                ctx.beginPath();
+                player.trail.forEach(pt => ctx.lineTo(pt.x, pt.y));
+                ctx.strokeStyle = player.color; ctx.lineWidth = player.radius * 0.5; ctx.stroke();
+
+                ctx.shadowBlur = 15; ctx.shadowColor = player.color; ctx.fillStyle = '#ffffff';
+                ctx.beginPath(); ctx.arc(player.x, player.y, player.radius, 0, Math.PI*2); ctx.fill();
+
+                ctx.shadowBlur = 0;
+                ctx.font = '16px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(player.emoji, player.x, player.y);
+
+                if (player.shieldActive) {
+                    const duration = 7000 + (upgrades.shieldBoost.level * 2000);
+                    const remainingTime = Math.max(0, player.shieldEndTime - now);
+                    if (remainingTime <= 0) {
+                        player.shieldActive = false;
+                    } else {
+                        const progress = remainingTime / duration;
+                        ctx.beginPath();
+                        ctx.arc(player.x, player.y, player.radius + 8, -Math.PI/2, (-Math.PI/2) + (Math.PI * 2 * progress));
+                        ctx.strokeStyle = '#00f2fe'; ctx.lineWidth = 3; ctx.shadowBlur = 10; ctx.shadowColor = '#00f2fe';
+                        ctx.stroke();
+                    }
+                }
+
+                if (player.magnetActive) {
+                    if (now > player.magnetEndTime) {
+                        player.magnetActive = false;
+                    } else {
+                        ctx.beginPath();
+                        ctx.arc(player.x, player.y, player.radius + 35, 0, Math.PI * 2);
+                        ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 2; ctx.setLineDash([4, 4]); ctx.stroke(); ctx.setLineDash([]);
+                    }
+                }
+
+                if (Math.random() < 0.045) spawnTarget();
+                
+                const obstacleSpawnChance = 0.0035 + Math.min(currentRunScore / 30000, 0.01);
+                if (Math.random() < obstacleSpawnChance) spawnObstacle();
+
+                targets.forEach((t, i) => {
+                    if (player.magnetActive || (upgrades.magnet.level > 0 && Math.hypot(player.x - t.x, player.y - t.y) < 120)) {
+                        let angle = Math.atan2(player.y - t.y, player.x - t.x);
+                        t.x += Math.cos(angle) * 5;
+                        t.y += Math.sin(angle) * 5;
+                    }
+
+                    t.y += currentScrollSpeed;
+                    ctx.fillStyle = t.color; ctx.shadowBlur = 10; ctx.shadowColor = t.color;
+                    ctx.beginPath(); ctx.arc(t.x, t.y, t.radius, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+
+                    let collectDist = player.radius + t.radius + (upgrades.magnet.level > 0 ? 25 : 0);
+                    if (Math.hypot(player.x - t.x, player.y - t.y) < collectDist) {
+                        comboMultiplier += 0.2; // Unlimited combo growth without a cap
+                        currentRunScore += Math.floor(100 * comboMultiplier); 
+                        scoreEl.textContent = currentRunScore; 
+                        playSound('score'); checkUnlocks();
+                        targets.splice(i, 1);
+                    } else if (t.y > height + 50) {
+                        targets.splice(i, 1);
+                    }
+                });
+
+                obstacles.forEach((ob, i) => {
+                    ob.y += currentScrollSpeed;
+                    if (ob.type === 'bar') {
+                        ctx.fillStyle = '#ff2a6d'; ctx.shadowBlur = 8; ctx.shadowColor = '#ff2a6d';
+                        ctx.fillRect(ob.x, ob.y, ob.w, ob.h); ctx.shadowBlur = 0;
+
+                        if (player.x + player.radius > ob.x && player.x - player.radius < ob.x + ob.w &&
+                            player.y + player.radius > ob.y && player.y - player.radius < ob.y + ob.h) {
+                            triggerDamage(); obstacles.splice(i, 1);
+                        }
+                    } else {
+                        ctx.font = '20px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                        ctx.fillText('💣', ob.x, ob.y);
+
+                        if (Math.hypot(player.x - ob.x, player.y - ob.y) < player.radius + ob.radius) {
+                            triggerDamage(); obstacles.splice(i, 1);
+                        }
+                    }
+                    if (ob.y > height + 50) obstacles.splice(i, 1);
+                });
+
+                shields.forEach((sh, i) => {
+                    sh.y += currentScrollSpeed;
+                    ctx.font = '18px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    ctx.fillText('🛡️', sh.x, sh.y);
+
+                    if (Math.hypot(player.x - sh.x, player.y - sh.y) < player.radius + sh.radius) {
+                        player.shieldActive = true; 
+                        player.shieldEndTime = Date.now() + (7000 + (upgrades.shieldBoost.level * 2000));
+                        playSound('shield'); shields.splice(i, 1);
+                    } else if (sh.y > height + 50) shields.splice(i, 1);
+                });
+
+                heartDrops.forEach((hd, i) => {
+                    hd.y += currentScrollSpeed;
+                    ctx.font = '18px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    ctx.fillText('❤️', hd.x, hd.y);
+
+                    if (Math.hypot(player.x - hd.x, player.y - hd.y) < player.radius + hd.radius) {
+                        hearts++; updateHeartsUI(); playSound('heart'); heartDrops.splice(i, 1);
+                    } else if (hd.y > height + 50) heartDrops.splice(i, 1);
+                });
+
+                keyDrops.forEach((kd, i) => {
+                    kd.y += currentScrollSpeed;
+                    ctx.font = '18px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    ctx.fillText('🔑', kd.x, kd.y);
+
+                    if (Math.hypot(player.x - kd.x, player.y - kd.y) < player.radius + kd.radius) {
+                        keysCollected++; keyCountEl.textContent = keysCollected; playSound('key'); checkUnlocks(); saveUserData();
+                        keyDrops.splice(i, 1);
+                    } else if (kd.y > height + 50) keyDrops.splice(i, 1);
+                });
+
+                magnetDrops.forEach((md, i) => {
+                    md.y += currentScrollSpeed;
+                    ctx.font = '18px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    ctx.fillText('🧲', md.x, md.y);
+
+                    if (Math.hypot(player.x - md.x, player.y - md.y) < player.radius + md.radius) {
+                        player.magnetActive = true;
+                        player.magnetEndTime = Date.now() + 5000;
+                        playSound('magnet');
+                        magnetDrops.splice(i, 1);
+                    } else if (md.y > height + 50) magnetDrops.splice(i, 1);
+                });
+            }
+
+            ctx.restore();
+            requestAnimationFrame(loop);
+        }
+        loop();
+    </script>
 </body>
 </html>
